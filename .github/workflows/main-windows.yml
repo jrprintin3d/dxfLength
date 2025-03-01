@@ -28,7 +28,7 @@ jobs:
           pyinstaller --onefile --clean --strip dxfLength.py
 
       - name: Code Sign Executable (optional)
-        if: ${{ secrets.CODE_SIGNING_CERTIFICATE }}
+        if: ${{ secrets.CODE_SIGNING_CERTIFICATE != '' }}
         run: |
           echo "${{ secrets.CODE_SIGNING_CERTIFICATE }}" > code_signing.pfx
           signtool sign /f code_signing.pfx /p "${{ secrets.CODE_SIGNING_CERTIFICATE_PASSWORD }}" /tr http://timestamp.digicert.com /td sha256 /fd sha256 dist\dxfLength.exe
@@ -38,3 +38,4 @@ jobs:
         with:
           name: dxfLength-windows
           path: dist/dxfLength.exe
+
