@@ -2,3 +2,4 @@ build/
 dist/
 *.dxf
 *.dxf
+*.DS_Store

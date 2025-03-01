@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Windows EXE (Optimized for Antivirus)
 
 on:
   push:
@@ -23,14 +23,18 @@ jobs:
         run: |
           pip install pyinstaller ezdxf
 
-      - name: Build EXE
+      - name: Build EXE without UPX Compression
         run: |
-          pyinstaller --onefile dxfLength.py
+          pyinstaller --onefile --clean --strip dxfLength.py
+
+      - name: Code Sign Executable (optional)
+        if: ${{ secrets.CODE_SIGNING_CERTIFICATE }}
+        run: |
+          echo "${{ secrets.CODE_SIGNING_CERTIFICATE }}" > code_signing.pfx
+          signtool sign /f code_signing.pfx /p "${{ secrets.CODE_SIGNING_CERTIFICATE_PASSWORD }}" /tr http://timestamp.digicert.com /td sha256 /fd sha256 dist\dxfLength.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: dxfLength-windows
           path: dist/dxfLength.exe
-
-
