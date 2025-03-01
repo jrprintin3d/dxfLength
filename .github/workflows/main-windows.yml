@@ -1,0 +1,36 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller ezdxf
+
+      - name: Build EXE
+        run: |
+          pyinstaller --onefile dxfLength.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dxfLength-windows
+          path: dist/dxfLength.exe
+
+
