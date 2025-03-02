@@ -51,25 +51,38 @@ namespace DXFLengthCalculator
             }
 
             // Polylinien verarbeiten über dynamischen Zugriff:
-            foreach (var entity in doc.Entities)
+            foreach (Polyline polyline in doc.Entities.Polylines)
             {
-                if (entity.Type == EntityType.Polyline)
+                int count = polyline.Vertexes.Count;
+                for (int i = 0; i < count - 1; i++)
                 {
-                    // Verwenden von dynamic um auf die intern implementierte Polyline zuzugreifen.
-                    dynamic poly = entity;
-                    int count = poly.Vertexes.Count;
-                    for (int i = 0; i < count - 1; i++)
-                    {
-                        var p1 = poly.Vertexes[i].Position;
-                        var p2 = poly.Vertexes[i + 1].Position;
-                        double segLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
-                        totalLength += segLength;
-                        UpdateBounds(p1.X, p1.Y);
-                        UpdateBounds(p2.X, p2.Y);
-                    }
+                    var p1 = polyline.Vertexes[i].Position;
+                    var p2 = polyline.Vertexes[i + 1].Position;
+                    double segLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+                    totalLength += segLength;
+                    UpdateBounds(p1.X, p1.Y);
+                    UpdateBounds(p2.X, p2.Y);
+                }
+                
+                // If the polyline is closed, add the segment from last to first point
+                if (polyline.IsClosed && count > 1)
+                {
+                    var p1 = polyline.Vertexes[count - 1].Position;
+                    var p2 = polyline.Vertexes[0].Position;
+                    double segLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+                    totalLength += segLength;
                 }
             }
-
+        var p2 = polyline.Vertexes[0].Position;
+        double segLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+        totalLength += segLength;
+    }
+}
+        var p2 = polyline.Vertexes[0].Position;
+        double segLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+        totalLength += segLength;
+    }
+}
             // Kreise verarbeiten:
             foreach (Circle circle in doc.Entities.Circles)
             {
