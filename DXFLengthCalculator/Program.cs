@@ -43,14 +43,14 @@ namespace DXFLengthCalculator
             foreach (Line line in doc.Entities.Lines)
             {
                 double length = Math.Sqrt(Math.Pow(line.EndPoint.X - line.StartPoint.X, 2) +
-                                          Math.Pow(line.EndPoint.Y - line.StartPoint.Y, 2));
+                                           Math.Pow(line.EndPoint.Y - line.StartPoint.Y, 2));
                 totalLength += length;
                 UpdateBounds(line.StartPoint.X, line.StartPoint.Y);
                 UpdateBounds(line.EndPoint.X, line.EndPoint.Y);
             }
 
-            // Leichtgewichtige Polylinien verarbeiten:
-            foreach (LwPolyline poly in doc.Entities.LwPolylines)
+            // Polylinien verarbeiten (alle Polylinien, auch lightweight, sind jetzt vom Typ Polyline):
+            foreach (Polyline poly in doc.Entities.Polylines)
             {
                 for (int i = 0; i < poly.Vertexes.Count - 1; i++)
                 {
