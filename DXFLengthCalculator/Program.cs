@@ -49,8 +49,8 @@ namespace DXFLengthCalculator
                 UpdateBounds(line.EndPoint.X, line.EndPoint.Y);
             }
 
-            // Polylinien verarbeiten (statt LwPolyline, verwenden wir Polyline)
-            foreach (Polyline poly in doc.Entities.Polylines)
+            // Leichtgewichtige Polylinien verarbeiten:
+            foreach (LwPolyline poly in doc.Entities.LwPolylines)
             {
                 for (int i = 0; i < poly.Vertexes.Count - 1; i++)
                 {
