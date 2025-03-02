@@ -1,5 +1,5 @@
 using System;
-using System.Linq;  // Wichtig für OfType<>
+using System.Linq;
 using netDxf;
 using netDxf.Entities;
 
@@ -16,7 +16,7 @@ namespace DXFLengthCalculator
             }
 
             string filePath = args[0];
-            DxfDocument doc = null;
+            DxfDocument doc;
             try
             {
                 doc = DxfDocument.Load(filePath);
@@ -50,17 +50,23 @@ namespace DXFLengthCalculator
                 UpdateBounds(line.EndPoint.X, line.EndPoint.Y);
             }
 
-            // Lightweight Polylinien verarbeiten:
-            foreach (LwPolyline poly in doc.Entities.OfType<LwPolyline>())
+            // Polylinien verarbeiten über dynamischen Zugriff:
+            foreach (var entity in doc.Entities)
             {
-                for (int i = 0; i < poly.Vertexes.Count - 1; i++)
+                if (entity.Type == EntityType.Polyline)
                 {
-                    var p1 = poly.Vertexes[i].Position;
-                    var p2 = poly.Vertexes[i + 1].Position;
-                    double segmentLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
-                    totalLength += segmentLength;
-                    UpdateBounds(p1.X, p1.Y);
-                    UpdateBounds(p2.X, p2.Y);
+                    // Verwenden von dynamic um auf die intern implementierte Polyline zuzugreifen.
+                    dynamic poly = entity;
+                    int count = poly.Vertexes.Count;
+                    for (int i = 0; i < count - 1; i++)
+                    {
+                        var p1 = poly.Vertexes[i].Position;
+                        var p2 = poly.Vertexes[i + 1].Position;
+                        double segLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+                        totalLength += segLength;
+                        UpdateBounds(p1.X, p1.Y);
+                        UpdateBounds(p2.X, p2.Y);
+                    }
                 }
             }
 
@@ -99,3 +105,4 @@ namespace DXFLengthCalculator
         }
     }
 }
+
