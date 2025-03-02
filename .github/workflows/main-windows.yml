@@ -1,4 +1,4 @@
-name: Build Windows EXE (Optimized for Antivirus)
+name: deaktiviertes Script Build Windows EXE (Optimized for Antivirus)
 
 on:
   push:
