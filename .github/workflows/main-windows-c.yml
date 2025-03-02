@@ -23,8 +23,8 @@ jobs:
         working-directory: DXFLengthCalculator
         run: dotnet restore DXFLengthCalculator.csproj
 
-
-      - name: Build and Publish
+      - name: Publish Project
+        working-directory: DXFLengthCalculator
         run: dotnet publish DXFLengthCalculator.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
 
       - name: Upload artifact
