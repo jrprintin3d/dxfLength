@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using netDxf;
 using netDxf.Entities;
 
@@ -31,7 +30,7 @@ namespace DXFLengthCalculator
             double minX = double.MaxValue, minY = double.MaxValue;
             double maxX = double.MinValue, maxY = double.MinValue;
 
-            // Hilfsmethode zur Aktualisierung der Bounding-Box
+            // Methode zur Aktualisierung der Bounding-Box
             void UpdateBounds(double x, double y)
             {
                 if (x < minX) minX = x;
@@ -40,67 +39,62 @@ namespace DXFLengthCalculator
                 if (y > maxY) maxY = y;
             }
 
-            foreach (var entity in doc.Entities)
+            // Linien verarbeiten:
+            foreach (Line line in doc.Entities.Lines)
             {
-                switch (entity)
+                double length = Math.Sqrt(Math.Pow(line.EndPoint.X - line.StartPoint.X, 2) +
+                                          Math.Pow(line.EndPoint.Y - line.StartPoint.Y, 2));
+                totalLength += length;
+                UpdateBounds(line.StartPoint.X, line.StartPoint.Y);
+                UpdateBounds(line.EndPoint.X, line.EndPoint.Y);
+            }
+
+            // Polylinien verarbeiten (statt LwPolyline, verwenden wir Polyline)
+            foreach (Polyline poly in doc.Entities.Polylines)
+            {
+                for (int i = 0; i < poly.Vertexes.Count - 1; i++)
                 {
-                    case Line line:
-                        totalLength += line.Length;
-                        UpdateBounds(line.StartPoint.X, line.StartPoint.Y);
-                        UpdateBounds(line.EndPoint.X, line.EndPoint.Y);
-                        break;
-
-                    case LwPolyline polyline:
-                        for (int i = 0; i < polyline.Vertexes.Count - 1; i++)
-                        {
-                            var p1 = polyline.Vertexes[i].Position;
-                            var p2 = polyline.Vertexes[i + 1].Position;
-                            totalLength += p1.Distance(p2);
-                            UpdateBounds(p1.X, p1.Y);
-                            UpdateBounds(p2.X, p2.Y);
-                        }
-                        if (polyline.Vertexes.Any())
-                        {
-                            var last = polyline.Vertexes.Last().Position;
-                            UpdateBounds(last.X, last.Y);
-                        }
-                        break;
-
-                    case Circle circle:
-                        totalLength += 2 * Math.PI * circle.Radius;
-                        UpdateBounds(circle.Center.X - circle.Radius, circle.Center.Y - circle.Radius);
-                        UpdateBounds(circle.Center.X + circle.Radius, circle.Center.Y + circle.Radius);
-                        break;
-
-                    case Arc arc:
-                        double startAngle = arc.StartAngle;
-                        double endAngle = arc.EndAngle;
-                        double angle = Math.Abs(endAngle - startAngle);
-                        if (angle > 180)
-                            angle = 360 - angle; // Korrektur, falls der Bogen über 0° geht.
-                        double radAngle = angle * Math.PI / 180.0;
-                        totalLength += radAngle * arc.Radius;
-
-                        // Berechne Start- und Endpunkte des Bogens
-                        double startX = arc.Center.X + arc.Radius * Math.Cos(startAngle * Math.PI / 180.0);
-                        double startY = arc.Center.Y + arc.Radius * Math.Sin(startAngle * Math.PI / 180.0);
-                        double endX = arc.Center.X + arc.Radius * Math.Cos(endAngle * Math.PI / 180.0);
-                        double endY = arc.Center.Y + arc.Radius * Math.Sin(endAngle * Math.PI / 180.0);
-                        UpdateBounds(startX, startY);
-                        UpdateBounds(endX, endY);
-                        break;
-
-                    // Weitere Entitätstypen (z.B. Ellipse, Spline) können bei Bedarf ergänzt werden.
-                    default:
-                        break;
+                    var p1 = poly.Vertexes[i].Position;
+                    var p2 = poly.Vertexes[i + 1].Position;
+                    double segmentLength = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+                    totalLength += segmentLength;
+                    UpdateBounds(p1.X, p1.Y);
+                    UpdateBounds(p2.X, p2.Y);
                 }
+            }
+
+            // Kreise verarbeiten:
+            foreach (Circle circle in doc.Entities.Circles)
+            {
+                totalLength += 2 * Math.PI * circle.Radius;
+                UpdateBounds(circle.Center.X - circle.Radius, circle.Center.Y - circle.Radius);
+                UpdateBounds(circle.Center.X + circle.Radius, circle.Center.Y + circle.Radius);
+            }
+
+            // Bögen (Arcs) verarbeiten:
+            foreach (Arc arc in doc.Entities.Arcs)
+            {
+                double startAngle = arc.StartAngle;
+                double endAngle = arc.EndAngle;
+                double angle = Math.Abs(endAngle - startAngle);
+                if (angle > 180)
+                    angle = 360 - angle; // Falls der Bogen über 0° hinausgeht.
+                double radAngle = angle * Math.PI / 180.0;
+                totalLength += radAngle * arc.Radius;
+
+                double startX = arc.Center.X + arc.Radius * Math.Cos(startAngle * Math.PI / 180.0);
+                double startY = arc.Center.Y + arc.Radius * Math.Sin(startAngle * Math.PI / 180.0);
+                double endX = arc.Center.X + arc.Radius * Math.Cos(endAngle * Math.PI / 180.0);
+                double endY = arc.Center.Y + arc.Radius * Math.Sin(endAngle * Math.PI / 180.0);
+                UpdateBounds(startX, startY);
+                UpdateBounds(endX, endY);
             }
 
             double width = maxX - minX;
             double height = maxY - minY;
 
-            Console.WriteLine($"Gesamte Schnittlänge: {totalLength:F2} Einheiten");
-            Console.WriteLine($"Minimale Blechmaße: Breite = {width:F2} Einheiten, Höhe = {height:F2} Einheiten");
+            Console.WriteLine($"Total cut length: {totalLength:F2} units");
+            Console.WriteLine($"Minimum sheet dimensions: width = {width:F2} units, height = {height:F2} units");
         }
     }
 }
