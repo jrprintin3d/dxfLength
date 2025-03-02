@@ -1,0 +1,34 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Restore dependencies
+        working-directory: DXFLengthCalculator
+        run: dotnet restore DXFLengthCalculator.csproj
+
+      - name: Publish Windows executable
+        working-directory: DXFLengthCalculator
+        run: dotnet publish DXFLengthCalculator.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DXFLengthCalculator-Windows
+          path: DXFLengthCalculator/bin/Release/net6.0/win-x64/publish/
