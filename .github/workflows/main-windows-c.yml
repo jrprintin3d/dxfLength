@@ -20,7 +20,9 @@ jobs:
           dotnet-version: '6.0.x'
 
       - name: Restore dependencies
+        working-directory: DXFLengthCalculator
         run: dotnet restore DXFLengthCalculator.csproj
+
 
       - name: Build and Publish
         run: dotnet publish DXFLengthCalculator.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
